@@ -1,4 +1,4 @@
-/* Windows 97 Retro Aesthetic */
+/* Windows 97 Retro Aesthetic with Pink Grunge */
 * {
     margin: 0;
     padding: 0;
@@ -7,11 +7,30 @@
 
 body {
     font-family: 'MS Sans Serif', Arial, sans-serif;
-    background: linear-gradient(135deg, #f0e6d2 0%, #c0c0c0 50%, #dfdfdf 100%);
+    background: linear-gradient(135deg, #ff69b4 0%, #ff1493 25%, #ffb6d9 50%, #ff69b4 75%, #ff1493 100%);
+    background-size: 400% 400%;
     background-attachment: fixed;
+    position: relative;
     color: #000;
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="2" cy="2" r="2" fill="%23000"/></svg>'), auto;
     overflow: hidden;
+}
+
+/* Grunge texture overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px),
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.02) 10px, rgba(0, 0, 0, 0.02) 20px),
+        repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.02) 10px, rgba(0, 0, 0, 0.02) 20px);
+    pointer-events: none;
+    z-index: -1;
 }
 
 .container {
@@ -284,7 +303,7 @@ h3 {
 
 /* Bio Box */
 .bio-box {
-    background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 100%);
+    background: linear-gradient(135deg, #ffb6d9 0%, #ff69b4 100%);
     border: 2px solid;
     border-color: #dfdfdf #808080 #808080 #dfdfdf;
     padding: 12px;
