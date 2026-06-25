@@ -10,7 +10,7 @@
     <div class="container">
         <!-- Top Bar -->
         <div class="taskbar">
-            <div class="taskbar-start" onclick="showSection('home')">Start</div>
+            <div class="taskbar-start" onclick="openMainWindow('home')">Start</div>
             <div class="taskbar-time">11:47 PM</div>
         </div>
 
@@ -35,7 +35,8 @@
 
             <div class="window-content">
                 <!-- Sidebar Navigation -->
-                <aside class="sidebar">
+                <aside class="sidebar" id="sidebar">
+                    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Collapse sidebar">◀</button>
                     <div class="sidebar-header">Navigation</div>
                     <nav class="sidebar-nav">
                         <a href="#home" onclick="showSection('home')" class="nav-link active">Home</a>
@@ -65,10 +66,24 @@
                         </div>
                         <div class="welcome-box">
                             <h2>Hey 😏, how's it going</h2>
-                            <p>Thanks for stopping by! Check out our music, see where we're playing, and get in touch.</p>
+                            <p>Thanks for stopping by! Check out our music, see where we're playing, and get in touch 🫵.</p>
                         </div>
                         <div class="marquee-box">
                             <div class="marquee">🎵 WEBSITE IN PROGRESS - Visit our socials to the left 🎵</div>
+                        </div>
+                        <div class="retro-player-box">
+                            <h3>LWAB.MP3PLAYER</h3>
+                            <audio id="retroAudio" controls preload="none">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <div class="retro-player-controls">
+                                <button type="button" class="btn-small" id="retroPrevTrackBtn">◀ PREV</button>
+                                <select id="retroTrackSelect" aria-label="Select song"></select>
+                                <button type="button" class="btn-small" id="retroNextTrackBtn">NEXT ▶</button>
+                                <button type="button" class="btn-small" id="visualPresetBtn">CHANGE VISUAL</button>
+                            </div>
+                            <p class="retro-now-playing" id="retroNowPlaying">Now loaded: Waiting for playlist</p>
+                            <canvas id="retroVisualizer" width="800" height="160" aria-label="Retro music visualizer"></canvas>
                         </div>
                     </section>
 
