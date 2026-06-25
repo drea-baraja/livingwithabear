@@ -24,7 +24,11 @@ function playSound(type) {
 }
 
 // Section Navigation
+let activeSectionId = 'home';
+
 function showSection(sectionId, options = {}) {
+    activeSectionId = sectionId;
+
     // Hide all sections
     const sections = document.querySelectorAll('.content-section');
     sections.forEach(section => {
@@ -51,6 +55,8 @@ function showSection(sectionId, options = {}) {
     if (!options.skipSound) {
         playSound('click');
     }
+
+    updatePlayerDockPlacement();
 }
 
 function toggleSidebar() {
@@ -113,6 +119,370 @@ function closeWindow() {
     playSound('click');
 }
 
+function isMobileLayout() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function getPlayerDockWindow() {
+    return document.getElementById('playerDockWindow');
+}
+
+function getPlayerDockContent() {
+    return document.getElementById('playerDockContent');
+}
+
+function getHomePlayerSlot() {
+    return document.getElementById('homePlayerSlot');
+}
+
+function getRetroPlayerBox() {
+    return document.getElementById('retroPlayerBox');
+}
+
+function updatePlayerDockPlacement() {
+    const playerBox = getRetroPlayerBox();
+    const homeSlot = getHomePlayerSlot();
+    const dockWindow = getPlayerDockWindow();
+    const dockContent = getPlayerDockContent();
+    const audioEl = document.getElementById('retroAudio');
+
+    if (!playerBox || !homeSlot || !dockWindow || !dockContent || !audioEl) {
+        return;
+    }
+
+    const shouldDock = activeSectionId !== 'home' && !audioEl.paused && Boolean(audioEl.src);
+
+    if (shouldDock) {
+        dockWindow.style.display = 'flex';
+        dockWindow.classList.remove('closed', 'minimized');
+        dockWindow.setAttribute('aria-hidden', 'false');
+
+        if (playerBox.parentElement !== dockContent) {
+            dockContent.appendChild(playerBox);
+        }
+    } else {
+        dockWindow.classList.remove('minimized', 'maximized');
+        dockWindow.style.display = 'none';
+        dockWindow.setAttribute('aria-hidden', 'true');
+
+        if (playerBox.parentElement !== homeSlot) {
+            homeSlot.appendChild(playerBox);
+        }
+    }
+}
+
+function minimizePlayerDock() {
+    const dockWindow = getPlayerDockWindow();
+    if (!dockWindow) {
+        return;
+    }
+
+    dockWindow.classList.remove('closed', 'maximized');
+    dockWindow.classList.add('minimized');
+    dockWindow.style.display = 'none';
+    updatePlayerDockPlacement();
+    playSound('click');
+}
+
+function maximizePlayerDock() {
+    const dockWindow = getPlayerDockWindow();
+    if (!dockWindow) {
+        return;
+    }
+
+    dockWindow.classList.toggle('maximized');
+    playSound('click');
+}
+
+function closePlayerDock() {
+    const dockWindow = getPlayerDockWindow();
+    const audioEl = document.getElementById('retroAudio');
+    if (!dockWindow) {
+        return;
+    }
+
+    // Stop the music and clear when closing
+    if (audioEl) {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+        audioEl.src = '';
+    }
+
+    dockWindow.classList.remove('minimized', 'maximized');
+    dockWindow.style.display = 'none';
+    dockWindow.setAttribute('aria-hidden', 'true');
+    playSound('click');
+}
+
+// Window dragging and resizing functionality
+let draggedWindow = null;
+let resizedWindow = null;
+let resizeCorner = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let resizeStartX = 0;
+let resizeStartY = 0;
+let resizeStartWidth = 0;
+let resizeStartHeight = 0;
+let resizeStartLeft = 0;
+let resizeStartTop = 0;
+
+function makeWindowDraggable(windowEl, titleBarEl) {
+    if (!titleBarEl) return;
+
+    titleBarEl.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.title-btn')) return;
+
+        draggedWindow = windowEl;
+        dragOffsetX = e.clientX - windowEl.getBoundingClientRect().left;
+        dragOffsetY = e.clientY - windowEl.getBoundingClientRect().top;
+
+        windowEl.style.position = 'fixed';
+        windowEl.classList.remove('maximized');
+    });
+}
+
+function makeWindowResizable(windowEl, resizeHandleEl, corner = 'br') {
+    if (!resizeHandleEl) return;
+
+    resizeHandleEl.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        resizedWindow = windowEl;
+        resizeCorner = corner;
+        resizeStartX = e.clientX;
+        resizeStartY = e.clientY;
+        resizeStartWidth = windowEl.offsetWidth;
+        resizeStartHeight = windowEl.offsetHeight;
+        resizeStartLeft = windowEl.getBoundingClientRect().left;
+        resizeStartTop = windowEl.getBoundingClientRect().top;
+
+        windowEl.classList.remove('maximized');
+    });
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (draggedWindow) {
+        draggedWindow.style.left = (e.clientX - dragOffsetX) + 'px';
+        draggedWindow.style.top = (e.clientY - dragOffsetY) + 'px';
+        draggedWindow.style.right = 'auto';
+        draggedWindow.style.bottom = 'auto';
+        draggedWindow.style.transform = 'none';
+    }
+
+    if (resizedWindow) {
+        const deltaX = e.clientX - resizeStartX;
+        const deltaY = e.clientY - resizeStartY;
+        
+        if (resizeCorner === 'br') {
+            // Bottom-right: resize width/height, don't move
+            const newWidth = resizeStartWidth + deltaX;
+            const newHeight = resizeStartHeight + deltaY;
+            resizedWindow.style.width = Math.max(300, newWidth) + 'px';
+            resizedWindow.style.height = Math.max(200, newHeight) + 'px';
+        } else if (resizeCorner === 'bl') {
+            // Bottom-left: resize width from left, height down
+            const newWidth = resizeStartWidth - deltaX;
+            const newHeight = resizeStartHeight + deltaY;
+            resizedWindow.style.width = Math.max(300, newWidth) + 'px';
+            resizedWindow.style.height = Math.max(200, newHeight) + 'px';
+            resizedWindow.style.left = (resizeStartLeft + deltaX) + 'px';
+        } else if (resizeCorner === 'tr') {
+            // Top-right: resize width right, height up
+            const newWidth = resizeStartWidth + deltaX;
+            const newHeight = resizeStartHeight - deltaY;
+            resizedWindow.style.width = Math.max(300, newWidth) + 'px';
+            resizedWindow.style.height = Math.max(200, newHeight) + 'px';
+            resizedWindow.style.top = (resizeStartTop + deltaY) + 'px';
+        } else if (resizeCorner === 'tl') {
+            // Top-left: resize width/height from both corners
+            const newWidth = resizeStartWidth - deltaX;
+            const newHeight = resizeStartHeight - deltaY;
+            resizedWindow.style.width = Math.max(300, newWidth) + 'px';
+            resizedWindow.style.height = Math.max(200, newHeight) + 'px';
+            resizedWindow.style.left = (resizeStartLeft + deltaX) + 'px';
+            resizedWindow.style.top = (resizeStartTop + deltaY) + 'px';
+        }
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    draggedWindow = null;
+    resizedWindow = null;
+    resizeCorner = null;
+});
+
+const lyricsTracks = [
+    {
+        title: 'Enough',
+        subtitle: 'Track 01',
+        source: 'audio/01. Enough.mp3',
+        lyrics: 'Lyrics coming soon.\n\nIf you want, I can add the full text here next.'
+    },
+    {
+        title: 'Do Something About It',
+        subtitle: 'Track 02',
+        source: 'audio/02. Do Something About It.mp3',
+        lyrics: 'Lyrics coming soon.\n\nWe can drop in the lyrics for this song whenever you want.'
+    },
+    {
+        title: 'Ruin',
+        subtitle: 'Track 03',
+        source: 'audio/03. Ruin.mp3',
+        lyrics: 'Lyrics coming soon.\n\nThis popup will hold the full lyrics once you paste them in.'
+    },
+    {
+        title: 'Hannah',
+        subtitle: 'Track 04',
+        source: 'audio/04. Hannah.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: 'Noise',
+        subtitle: 'Track 05',
+        source: 'audio/05. Noise.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: 'Yet',
+        subtitle: 'Track 06',
+        source: 'audio/06. Yet.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: "Don't Worry Darling",
+        subtitle: 'Track 07',
+        source: 'audio/07. Don_t Worry Darling.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: 'Candor',
+        subtitle: 'Track 08',
+        source: 'audio/08. Candor.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: 'Hate To Break It To You',
+        subtitle: 'Track 09',
+        source: 'audio/09. Hate To Break It To You.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: 'Resurrectionist',
+        subtitle: 'Track 10',
+        source: 'audio/10. Resurrectionist.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: '1408',
+        subtitle: 'Track 11',
+        source: 'audio/11. 1408.mp3',
+        lyrics: 'Lyrics coming soon.'
+    },
+    {
+        title: "In Case I Don't See You",
+        subtitle: 'Track 12',
+        source: 'audio/12. In Case I Don_t See You.mp3',
+        lyrics: 'Lyrics coming soon.'
+    }
+];
+
+function renderLyricsSection() {
+    const grid = document.getElementById('lyricsGrid');
+    if (!grid) {
+        return;
+    }
+
+    grid.innerHTML = '';
+
+    lyricsTracks.forEach((track, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'lyrics-song-btn';
+        button.textContent = `${track.title}`;
+        button.addEventListener('click', () => openLyricsWindow(index));
+        grid.appendChild(button);
+    });
+}
+
+function openLyricsWindow(trackIndex) {
+    const track = lyricsTracks[trackIndex];
+    const lyricsWindow = document.getElementById('lyricsWindow');
+    const lyricsTitle = document.getElementById('lyricsWindowTitle');
+    const lyricsContent = document.getElementById('lyricsWindowContent');
+
+    if (!track || !lyricsWindow || !lyricsTitle || !lyricsContent) {
+        return;
+    }
+
+    lyricsTitle.textContent = `${track.title} - Lyrics`;
+    lyricsContent.innerHTML = `
+        <div class="lyrics-meta">
+            <h3>${track.title}</h3>
+            <p><strong>${track.subtitle}</strong></p>
+            <pre style="white-space: pre-wrap; font-family: inherit; margin-top: 8px;">${track.lyrics}</pre>
+        </div>
+        <div class="lyrics-actions">
+            <button type="button" class="btn-small" onclick="loadLyricsSong(${trackIndex})">Play Song</button>
+            <button type="button" class="btn-small" onclick="closeLyricsWindow()">Close</button>
+        </div>
+    `;
+
+    lyricsWindow.style.display = 'flex';
+    lyricsWindow.classList.remove('closed', 'minimized');
+    lyricsWindow.classList.add('open');
+    lyricsWindow.setAttribute('aria-hidden', 'false');
+    playSound('click');
+}
+
+function loadLyricsSong(trackIndex) {
+    const audioEl = document.getElementById('retroAudio');
+    const trackSelect = document.getElementById('retroTrackSelect');
+    const track = lyricsTracks[trackIndex];
+
+    if (!audioEl || !track) {
+        return;
+    }
+
+    if (trackSelect) {
+        trackSelect.value = String(trackIndex);
+    }
+
+    audioEl.src = track.source;
+    audioEl.play().catch(() => {});
+    playSound('click');
+}
+
+function minimizeLyricsWindow() {
+    const lyricsWindow = document.getElementById('lyricsWindow');
+    if (!lyricsWindow) {
+        return;
+    }
+    lyricsWindow.classList.remove('closed');
+    lyricsWindow.classList.add('minimized');
+    playSound('click');
+}
+
+function maximizeLyricsWindow() {
+    const lyricsWindow = document.getElementById('lyricsWindow');
+    if (!lyricsWindow) {
+        return;
+    }
+    lyricsWindow.classList.toggle('maximized');
+    playSound('click');
+}
+
+function closeLyricsWindow() {
+    const lyricsWindow = document.getElementById('lyricsWindow');
+    if (!lyricsWindow) {
+        return;
+    }
+    lyricsWindow.classList.remove('minimized');
+    lyricsWindow.classList.add('closed');
+    lyricsWindow.style.display = 'none';
+    lyricsWindow.setAttribute('aria-hidden', 'true');
+    playSound('click');
+}
+
 function setupRetroVisualizer() {
     const audioEl = document.getElementById('retroAudio');
     const trackSelect = document.getElementById('retroTrackSelect');
@@ -126,20 +496,7 @@ function setupRetroVisualizer() {
         return;
     }
 
-    const tracks = [
-        { title: 'Enough',                  src: 'audio/01. Enough.mp3' },
-        { title: 'Do Something About It',   src: 'audio/02. Do Something About It.mp3' },
-        { title: 'Ruin',                    src: 'audio/03. Ruin.mp3' },
-        { title: 'Hannah',                  src: 'audio/04. Hannah.mp3' },
-        { title: 'Noise',                   src: 'audio/05. Noise.mp3' },
-        { title: 'Yet',                     src: 'audio/06. Yet.mp3' },
-        { title: "Don't Worry Darling",     src: "audio/07. Don_t Worry Darling.mp3" },
-        { title: 'Candor',                  src: 'audio/08. Candor.mp3' },
-        { title: 'Hate To Break It To You', src: 'audio/09. Hate To Break It To You.mp3' },
-        { title: 'Resurrectionist',         src: 'audio/10. Resurrectionist.mp3' },
-        { title: '1408',                    src: 'audio/11. 1408.mp3' },
-        { title: "In Case I Don't See You", src: "audio/12. In Case I Don_t See You.mp3" }
-    ];
+    const tracks = lyricsTracks;
 
     let currentTrackIndex = 0;
 
@@ -163,7 +520,7 @@ function setupRetroVisualizer() {
 
         trackSelect.value = String(currentTrackIndex);
         nowPlaying.textContent = `Now loaded: ${track.title}`;
-        audioEl.src = track.src;
+        audioEl.src = track.source;
 
         if (autoplay) {
             audioEl.play().catch(() => {});
@@ -270,6 +627,12 @@ function setupRetroVisualizer() {
         if (audioContext.state === 'suspended') {
             audioContext.resume().catch(() => {});
         }
+
+        updatePlayerDockPlacement();
+    });
+
+    audioEl.addEventListener('pause', () => {
+        updatePlayerDockPlacement();
     });
 
     loadTrack(0, false);
@@ -328,6 +691,13 @@ function submitForm(event) {
 }
 
 // Add click sounds to buttons
+function handleHashNavigation() {
+    const sectionId = location.hash.replace('#', '') || 'home';
+    showSection(sectionId, { skipSound: true });
+}
+
+document.addEventListener('hashchange', handleHashNavigation);
+
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('button, .nav-link, .social-links a, .menu-bar span, .playlist li');
     buttons.forEach(button => {
@@ -338,10 +708,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Initialize with home section visible
-    showSection('home', { skipSound: true });
+    // Initialize the active section from the URL hash.
+    handleHashNavigation();
+    renderLyricsSection();
     updateMaximizeButtonIcon();
     setupRetroVisualizer();
+    updatePlayerDockPlacement();
+
+    // Enable dragging and resizing for windows
+    const lyricsWindow = document.getElementById('lyricsWindow');
+    const lyricsWindowTitleBar = document.getElementById('lyricsWindowTitleBar');
+    const lyricsWindowResizeBL = document.getElementById('lyricsWindowResizeBL');
+    const lyricsWindowResize = document.getElementById('lyricsWindowResize');
+    const playerDockWindow = document.getElementById('playerDockWindow');
+    const playerDockTitleBar = document.getElementById('playerDockTitleBar');
+    const playerDockResizeBL = document.getElementById('playerDockResizeBL');
+    const playerDockResize = document.getElementById('playerDockResize');
+
+    if (lyricsWindow && lyricsWindowTitleBar) {
+        makeWindowDraggable(lyricsWindow, lyricsWindowTitleBar);
+    }
+    if (lyricsWindow && lyricsWindowResizeBL) {
+        makeWindowResizable(lyricsWindow, lyricsWindowResizeBL, 'bl');
+    }
+    if (lyricsWindow && lyricsWindowResize) {
+        makeWindowResizable(lyricsWindow, lyricsWindowResize, 'br');
+    }
+    if (playerDockWindow && playerDockTitleBar) {
+        makeWindowDraggable(playerDockWindow, playerDockTitleBar);
+    }
+    if (playerDockWindow && playerDockResizeBL) {
+        makeWindowResizable(playerDockWindow, playerDockResizeBL, 'bl');
+    }
+    if (playerDockWindow && playerDockResize) {
+        makeWindowResizable(playerDockWindow, playerDockResize, 'br');
+    }
 });
 
 // Update time on taskbar

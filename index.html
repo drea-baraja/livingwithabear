@@ -14,6 +14,8 @@
             <div class="taskbar-time">11:47 PM</div>
         </div>
 
+        <div class="player-dock-host" id="playerDockHost"></div>
+
         <!-- Main Window -->
         <div class="window" id="mainWindow">
             <div class="title-bar">
@@ -42,7 +44,7 @@
                         <a href="#home" onclick="showSection('home')" class="nav-link active">Home</a>
                         <a href="#about" onclick="showSection('about')" class="nav-link">About</a>
                         <a href="#media" onclick="showSection('media')" class="nav-link">Photos & Videos</a>
-                        <a href="#music" onclick="showSection('music')" class="nav-link">Music</a>
+                        <a href="#lyrics" onclick="showSection('lyrics')" class="nav-link">Lyrics</a>
                         <a href="#shows" onclick="showSection('shows')" class="nav-link">Show Dates</a>
                         <a href="#contact" onclick="showSection('contact')" class="nav-link">Contact</a>
                     </nav>
@@ -71,19 +73,21 @@
                         <div class="marquee-box">
                             <div class="marquee">🎵 WEBSITE IN PROGRESS - Visit our socials to the left 🎵</div>
                         </div>
-                        <div class="retro-player-box">
-                            <h3>LWAB.MP3PLAYER</h3>
-                            <audio id="retroAudio" controls preload="none">
-                                Your browser does not support the audio element.
-                            </audio>
-                            <div class="retro-player-controls">
-                                <button type="button" class="btn-small" id="retroPrevTrackBtn">◀ PREV</button>
-                                <select id="retroTrackSelect" aria-label="Select song"></select>
-                                <button type="button" class="btn-small" id="retroNextTrackBtn">NEXT ▶</button>
-                                <button type="button" class="btn-small" id="visualPresetBtn">CHANGE VISUAL</button>
+                        <div id="homePlayerSlot">
+                            <div class="retro-player-box" id="retroPlayerBox">
+                                <h3>LWAB.MP3PLAYER</h3>
+                                <audio id="retroAudio" controls controlslist="nodownload" preload="none" oncontextmenu="return false;">
+                                    Your browser does not support the audio element.
+                                </audio>
+                                <div class="retro-player-controls">
+                                    <button type="button" class="btn-small" id="retroPrevTrackBtn">◀ PREV</button>
+                                    <select id="retroTrackSelect" aria-label="Select song"></select>
+                                    <button type="button" class="btn-small" id="retroNextTrackBtn">NEXT ▶</button>
+                                    <button type="button" class="btn-small" id="visualPresetBtn">CHANGE VISUAL</button>
+                                </div>
+                                <p class="retro-now-playing" id="retroNowPlaying">Now loaded: Waiting for playlist</p>
+                                <canvas id="retroVisualizer" width="800" height="160" aria-label="Retro music visualizer"></canvas>
                             </div>
-                            <p class="retro-now-playing" id="retroNowPlaying">Now loaded: Waiting for playlist</p>
-                            <canvas id="retroVisualizer" width="800" height="160" aria-label="Retro music visualizer"></canvas>
                         </div>
                     </section>
 
@@ -123,36 +127,11 @@
                         </ul>
                     </section>
 
-                    <!-- Music Section -->
-                    <section id="music" class="content-section" style="display:none;">
-                        <h1>Our Music</h1>
-                        <div class="music-player">
-                            <div class="player-display">
-                                <div class="player-title">Now Playing: Living with a Bear</div>
-                                <div class="player-bar">
-                                    <div class="player-progress" id="progress"></div>
-                                </div>
-                                <div class="player-controls">
-                                    <button class="player-btn" onclick="playSound('click')">⏮️</button>
-                                    <button class="player-btn" id="playBtn" onclick="togglePlay()">▶️</button>
-                                    <button class="player-btn" onclick="playSound('click')">⏭️</button>
-                                    <button class="player-btn" onclick="toggleMute()">🔊</button>
-                                </div>
-                                <div class="player-volume">
-                                    <input type="range" min="0" max="100" value="70" class="volume-slider">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="playlist">
-                            <h3>Popular Tracks</h3>
-                            <ul>
-                                <li onclick="playSound('click')">🎵 Track 1 - Coming Soon</li>
-                                <li onclick="playSound('click')">🎵 Track 2 - Coming Soon</li>
-                                <li onclick="playSound('click')">🎵 Track 3 - Coming Soon</li>
-                                <li onclick="playSound('click')">🎵 Track 4 - Coming Soon</li>
-                            </ul>
-                            <p style="margin-top: 15px; font-size: 12px;"><em>More music coming soon. Follow us to stay updated!</em></p>
-                        </div>
+                    <!-- Lyrics Section -->
+                    <section id="lyrics" class="content-section" style="display:none;">
+                        <h1>Lyrics</h1>
+                        <div class="lyrics-grid" id="lyricsGrid"></div>
+                        <p style="margin-top: 15px; font-size: 12px;"><em>Select a song to open its lyrics window.</em></p>
                     </section>
 
                     <!-- Show Dates Section -->
@@ -213,6 +192,48 @@
                 </main>
             </div>
         </div>
+    </div>
+
+    <div class="window lyrics-window" id="lyricsWindow" aria-hidden="true" style="display:none;">
+        <div class="title-bar" id="lyricsWindowTitleBar">
+            <span class="title-text" id="lyricsWindowTitle">Lyrics</span>
+            <div class="title-buttons">
+                <button class="title-btn minimize-btn" onclick="minimizeLyricsWindow()">_</button>
+                <button class="title-btn maximize-btn" onclick="maximizeLyricsWindow()">□</button>
+                <button class="title-btn close-btn" onclick="closeLyricsWindow()">✕</button>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Tools</span>
+            <span>Help</span>
+        </div>
+        <div class="lyrics-window-content" id="lyricsWindowContent"></div>
+        <div class="window-resize-handle window-resize-bl" id="lyricsWindowResizeBL"></div>
+        <div class="window-resize-handle window-resize-br" id="lyricsWindowResize"></div>
+    </div>
+
+    <div class="window player-dock-window" id="playerDockWindow" aria-hidden="true" style="display:none;">
+        <div class="title-bar" id="playerDockTitleBar">
+            <span class="title-text" id="playerDockTitle">LWAB.MP3PLAYER</span>
+            <div class="title-buttons">
+                <button class="title-btn minimize-btn" onclick="minimizePlayerDock()">_</button>
+                <button class="title-btn maximize-btn" onclick="maximizePlayerDock()">□</button>
+                <button class="title-btn close-btn" onclick="closePlayerDock()">✕</button>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Tools</span>
+            <span>Help</span>
+        </div>
+        <div class="player-dock-content" id="playerDockContent"></div>
+        <div class="window-resize-handle window-resize-bl" id="playerDockResizeBL"></div>
+        <div class="window-resize-handle window-resize-br" id="playerDockResize"></div>
     </div>
 
     <script src="script.js"></script>
