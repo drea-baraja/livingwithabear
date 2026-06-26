@@ -169,6 +169,19 @@ function updatePlayerDockPlacement() {
         return;
     }
 
+    // On mobile, never pop out the player window. Keep playback running in Home.
+    if (isMobileLayout()) {
+        dockWindow.classList.remove('minimized', 'maximized');
+        dockWindow.style.display = 'none';
+        dockWindow.setAttribute('aria-hidden', 'true');
+
+        if (playerBox.parentElement !== homeSlot) {
+            homeSlot.appendChild(playerBox);
+        }
+
+        return;
+    }
+
     const shouldDock = activeSectionId !== 'home' && !audioEl.paused && Boolean(audioEl.src);
 
     if (shouldDock) {
