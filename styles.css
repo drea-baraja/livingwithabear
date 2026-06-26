@@ -958,6 +958,16 @@ li a:visited {
 
 /* Responsive */
 @media (max-width: 768px) {
+    body {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .container {
+        /* Keep UI clear of phone status/notch area. */
+        height: calc(100dvh - env(safe-area-inset-top, 0px));
+        padding: 18px 10px 10px;
+    }
+
     .window {
         width: 100%;
         max-width: 100%;
@@ -980,7 +990,7 @@ li a:visited {
     }
 
     .player-dock-window {
-        top: 50px;
+        top: calc(50px + env(safe-area-inset-top, 0px));
         right: 0;
         bottom: auto;
         left: 0;
@@ -993,7 +1003,7 @@ li a:visited {
     }
 
     .player-dock-window.maximized {
-        top: 0;
+        top: env(safe-area-inset-top, 0px);
         left: 0;
         right: 0;
         bottom: auto;
