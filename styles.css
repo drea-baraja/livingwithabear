@@ -968,7 +968,7 @@ li a:visited {
 
     .container {
         /* Keep UI clear of phone status/notch area. */
-        height: calc(100dvh - max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px)));
+        height: calc(100svh - max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px)));
         padding: calc(18px + max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px))) 10px 10px;
     }
 

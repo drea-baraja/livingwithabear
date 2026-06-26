@@ -80,9 +80,11 @@ function applyMobileSafeTopOffset() {
     }
 
     const viewportTop = window.visualViewport ? Math.max(0, Math.round(window.visualViewport.offsetTop)) : 0;
-    // Keep a minimum cushion for browsers that do not report inset changes reliably.
-    const mobileTop = Math.max(12, viewportTop);
-    root.style.setProperty('--mobile-safe-top', `${mobileTop}px`);
+    const currentTop = parseInt(getComputedStyle(root).getPropertyValue('--mobile-safe-top'), 10) || 0;
+    // Keep a reliable baseline and never shrink during navigation to prevent jump-up.
+    const measuredTop = Math.max(16, viewportTop);
+    const stickyTop = Math.max(currentTop, measuredTop);
+    root.style.setProperty('--mobile-safe-top', `${stickyTop}px`);
 }
 
 function openMainWindow(sectionId = 'home') {
