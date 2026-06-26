@@ -1,4 +1,8 @@
 /* Windows 97 Retro Aesthetic with Pink Grunge */
+:root {
+    --mobile-safe-top: 0px;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -959,13 +963,13 @@ li a:visited {
 /* Responsive */
 @media (max-width: 768px) {
     body {
-        padding-top: env(safe-area-inset-top, 0px);
+        padding-top: max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px));
     }
 
     .container {
         /* Keep UI clear of phone status/notch area. */
-        height: calc(100dvh - env(safe-area-inset-top, 0px));
-        padding: 18px 10px 10px;
+        height: calc(100dvh - max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px)));
+        padding: calc(18px + max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px))) 10px 10px;
     }
 
     .window {
@@ -990,7 +994,7 @@ li a:visited {
     }
 
     .player-dock-window {
-        top: calc(50px + env(safe-area-inset-top, 0px));
+        top: calc(50px + max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px)));
         right: 0;
         bottom: auto;
         left: 0;
@@ -1003,7 +1007,7 @@ li a:visited {
     }
 
     .player-dock-window.maximized {
-        top: env(safe-area-inset-top, 0px);
+        top: max(env(safe-area-inset-top, 0px), var(--mobile-safe-top, 0px));
         left: 0;
         right: 0;
         bottom: auto;

@@ -68,6 +68,23 @@ function toggleSidebar() {
     playSound('click');
 }
 
+function applyMobileSafeTopOffset() {
+    const root = document.documentElement;
+    if (!root) {
+        return;
+    }
+
+    if (!window.matchMedia('(max-width: 768px)').matches) {
+        root.style.setProperty('--mobile-safe-top', '0px');
+        return;
+    }
+
+    const viewportTop = window.visualViewport ? Math.max(0, Math.round(window.visualViewport.offsetTop)) : 0;
+    // Keep a minimum cushion for browsers that do not report inset changes reliably.
+    const mobileTop = Math.max(12, viewportTop);
+    root.style.setProperty('--mobile-safe-top', `${mobileTop}px`);
+}
+
 function openMainWindow(sectionId = 'home') {
     const mainWindow = document.getElementById('mainWindow');
     const wasHidden = mainWindow.classList.contains('closed') || mainWindow.classList.contains('minimized');
@@ -692,6 +709,7 @@ function submitForm(event) {
 
 // Add click sounds to buttons
 function handleHashNavigation() {
+    applyMobileSafeTopOffset();
     const sectionId = location.hash.replace('#', '') || 'home';
     showSection(sectionId, { skipSound: true });
 }
@@ -708,6 +726,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    applyMobileSafeTopOffset();
+
     // Initialize the active section from the URL hash.
     handleHashNavigation();
     renderLyricsSection();
@@ -742,6 +762,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (playerDockWindow && playerDockResize) {
         makeWindowResizable(playerDockWindow, playerDockResize, 'br');
+    }
+
+    window.addEventListener('resize', applyMobileSafeTopOffset);
+    window.addEventListener('orientationchange', applyMobileSafeTopOffset);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', applyMobileSafeTopOffset);
+        window.visualViewport.addEventListener('scroll', applyMobileSafeTopOffset);
     }
 });
 
